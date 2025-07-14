@@ -1,0 +1,178 @@
+@font-face {
+  font-family: 'GTEestiProText';
+  src: url('/fonts/GTEestiProText-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GTEestiProText';
+  src: url('/fonts/GTEestiProText-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GTEestiProText';
+  src: url('/fonts/GTEestiProText-Book.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GTEestiProText';
+  src: url('/fonts/GTEestiProText-BookItalic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GTEestiProText';
+  src: url('/fonts/GTEestiProText-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GTEestiProText';
+  src: url('/fonts/GTEestiProText-RegularItalic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GTEestiProText';
+  src: url('/fonts/GTEestiProText-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GTEestiProText';
+  src: url('/fonts/GTEestiProText-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GTEestiProText';
+  src: url('/fonts/GTEestiProText-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GTEestiProText';
+  src: url('/fonts/GTEestiProText-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  font-family: 'GTEestiProText';
+  line-height: 1.5;
+  font-weight: 400;
+  font-size: 14px;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: flex-start;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #fff;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+.sidebar {
+  width: 300px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  height: 100vh;
+  padding: 1em;
+  color: #13294B;
+}
+
+.recent-conversation-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5em;
+  color: #13294B;
+}
+
+.search-conversation {
+  width: 100%;
+  padding: 0.5em;
+  margin-bottom: 1em;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.conversation-item {
+  font-size: 0.9rem;
+  margin-bottom: 0.5em;
+  color: #213547;
+  cursor: pointer;
+}
+
+.conversation-item:hover {
+  background-color: #f9f9f9;
+}
+
+.conversation-item-deletable {
+  position: relative;
+  padding-right: 20px; 
+}
+
+.conversation-item-deletable::after {
+  content: '🗑'; 
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 0.8rem;
+  color: #999;
+  cursor: pointer;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  button {
+    background-color: #13294B;
+    color: #fff;
+  }
+  button:hover {
+    background-color: #b28300;
+  }
+}

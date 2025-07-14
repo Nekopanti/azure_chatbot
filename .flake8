@@ -1,0 +1,14 @@
+[flake8]
+# 忽略某些错误代码，比如 E501 是针对每行字符过长的错误
+ignore = E501, W503, F401, E203, E402
+
+# 设置每行允许的最大字符数
+max-line-length = 120
+
+# 排除某些目录，比如虚拟环境文件夹
+exclude =
+    .git,
+    __pycache__,
+    venv,
+    .venv
+
