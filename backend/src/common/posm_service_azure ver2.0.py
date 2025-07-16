@@ -4,7 +4,6 @@ import json
 from typing import List, Dict, Any, Tuple, Optional
 from azure.search.documents import SearchClient
 from azure.core.credentials import AzureKeyCredential
-from azure.storage.blob import BlobServiceClient
 from openai import AzureOpenAI
 from src.common.logger import get_logger
 
@@ -13,12 +12,10 @@ logger = get_logger("posm_service_azure")
 
 
 class NaturalLanguageQASystem:
-    def __init__(self, search_index_name: str, cache_manager):
+    def __init__(self, search_index_name: str):
         self.search_index_name = search_index_name
-        self.cache = cache_manager
         self._init_openai_clients()
         self._init_search_client()
-        self._init_blob_client()
         self._init_field_mappings()
         self._init_value_mappings()
 
@@ -41,23 +38,6 @@ class NaturalLanguageQASystem:
             endpoint=os.getenv("AZURE_SEARCH_ENDPOINT"),
             index_name=self.search_index_name,
             credential=AzureKeyCredential(os.getenv("AZURE_SEARCH_KEY")),
-        )
-
-    def _init_blob_client(self):
-        self.storage_conn_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-        self.container_name = os.getenv("VALUE_MAPPING_BLOB_CONTAINER")
-        self.blob_name = os.getenv("VALUE_MAPPING_BLOB_NAME")
-
-        if not self.storage_conn_str:
-            raise ValueError(
-                "AZURE_STORAGE_CONNECTION_STRING environment variable missing"
-            )
-
-        blob_service_client = BlobServiceClient.from_connection_string(
-            self.storage_conn_str
-        )
-        self.blob_client = blob_service_client.get_blob_client(
-            self.container_name, self.blob_name
         )
 
     def _init_field_mappings(self):
@@ -138,125 +118,122 @@ class NaturalLanguageQASystem:
             "product_brand": ["brand", "manufacturer", "label", "make"],
         }
 
-    # def _init_value_mappings(self):
-    #     # Define value normalization rules for consistent filtering
-    #     self.VALUE_MAPPING = {
-    #         "product_execution_level": {
-    #             "lighthouse": "Lighthouse",
-    #             "lh": "Lighthouse",
-    #             "l": "Lighthouse",
-    #             "light": "Lighthouse",
-    #             "1": "Lighthouse",
-    #             "enhanced": "Enhanced",
-    #             "enh": "Enhanced",
-    #             "e": "Enhanced",
-    #             "2": "Enhanced",
-    #             "standard": "Standard",
-    #             "std": "Standard",
-    #             "s": "Standard",
-    #             "3": "Standard",
-    #             "basic": "Basic",
-    #             "bas": "Basic",
-    #             "b": "Basic",
-    #             "4": "Basic",
-    #         },
-    #         "product_brand": {
-    #             # Brand name normalization mappings
-    #             "multibrand": "Multibrand",
-    #             "aperol": "APEROL",
-    #             "aperol spritz": "Aperol Spritz",
-    #             "campari": "Campari",
-    #             "crodino": "Crodino",
-    #             "bulldog": "Bulldog",
-    #             "bulldog london dry gin": "BULLDOG LONDON DRY GIN",
-    #             "bulldog london dry": "BULLDOG LONDON DRY",
-    #             "braulio": "Braulio",
-    #             "averna": "Averna",
-    #             "amaro averna": "Amaro Averna",
-    #             "amaro averna siciliano": "AMARO AVERNA SICILIANO",
-    #             "cynar": "CYNAR",
-    #             "cinzano": "Cinzano",
-    #             "riccadonna": "Riccadonna",
-    #             "mondoro": "Mondoro",
-    #             "bickens": "Bickens",
-    #             "espolon tequila": "Espolon Tequila",
-    #             "espolon": "Espolon",
-    #             "espólon tequila": "ESPOLÓN TEQUILA",
-    #             "wild turkey": "Wild Turkey",
-    #             "appleton estate": "Appleton Estate",
-    #             "unbranded": "Unbranded",
-    #             "skyy vodka": "SKYY Vodka",
-    #             "wild turkey american honey": "Wild Turkey American Honey",
-    #             "american honey": "AMERICAN HONEY",
-    #             "wild turkey american honey®": "Wild Turkey American Honey®",
-    #             "the glen grant": "The Glen Grant",
-    #             "glengrant": "GLENGRANT",
-    #             "glen grant": "Glen Grant",
-    #             "wray & nephew": "WRAY & NEPHEW",
-    #             "montelobos": "MONTELOBOS",
-    #             "montelobos®": "MONTELOBOS®",
-    #             "montelobos® - mezcal artesanal": "MONTELOBOS® - MEZCAL ARTESANAL",
-    #             "mayenda tequila": "Mayenda Tequila",
-    #             "mayenda": "Mayenda",
-    #             "howler head": "Howler Head",
-    #             "ancho reyes": "Ancho Reyes",
-    #             "grand marnier": "Grand Marnier",
-    #             "lallier": "Lallier",
-    #             "lallier champagne": "Lallier Champagne",
-    #             "bisquit & dubouché": "Bisquit & Dubouché",
-    #             "bisquit & dubouche": "Bisquit & Dubouche",
-    #             "bisquit & dubouche cognac": "Bisquit & Dubouche Cognac",
-    #             "picon": "Picon",
-    #             "campari group": "Campari Group",
-    #             "campari academy": "Campari Academy",
-    #             # Add common case variations
-    #             "multibrand": "Multibrand",
-    #             "aperol": "APEROL",
-    #             "campari": "Campari",
-    #             "crodino": "Crodino",
-    #             "bulldog": "Bulldog",
-    #             "braulio": "Braulio",
-    #             "averna": "Averna",
-    #             "cynar": "CYNAR",
-    #             "cinzano": "Cinzano",
-    #             "riccadonna": "Riccadonna",
-    #             "mondoro": "Mondoro",
-    #             "bickens": "Bickens",
-    #             "espolon": "Espolon",
-    #             "wild turkey": "Wild Turkey",
-    #             "appleton estate": "Appleton Estate",
-    #             "unbranded": "Unbranded",
-    #             "skyy vodka": "SKYY Vodka",
-    #             "glen grant": "Glen Grant",
-    #             "wray & nephew": "WRAY & NEPHEW",
-    #             "montelobos": "MONTELOBOS",
-    #             "mayenda": "Mayenda",
-    #             "howler head": "Howler Head",
-    #             "ancho reyes": "Ancho Reyes",
-    #             "grand marnier": "Grand Marnier",
-    #             "lallier": "Lallier",
-    #             "bisquit & dubouche": "Bisquit & Dubouche",
-    #             "picon": "Picon",
-    #             "campari group": "Campari Group",
-    #         },
-    #         "product_placement": {
-    #             "external": "External",
-    #             "outdoor": "External",
-    #             "outside": "External",
-    #             "internal": "Internal",
-    #             "indoor": "Internal",
-    #             "inside": "Internal",
-    #             "table": "Table/Counter",
-    #             "counter": "Table/Counter",
-    #             "tabletop": "Table/Counter",
-    #             "staff": "Staff",
-    #             "employee": "Staff",
-    #             "personnel": "Staff",
-    #         },
-    #     }
-
     def _init_value_mappings(self):
-        self.VALUE_MAPPING = self._load_value_mappings_from_blob()
+        # Define value normalization rules for consistent filtering
+        self.VALUE_MAPPING = {
+            "product_execution_level": {
+                "lighthouse": "Lighthouse",
+                "lh": "Lighthouse",
+                "l": "Lighthouse",
+                "light": "Lighthouse",
+                "1": "Lighthouse",
+                "enhanced": "Enhanced",
+                "enh": "Enhanced",
+                "e": "Enhanced",
+                "2": "Enhanced",
+                "standard": "Standard",
+                "std": "Standard",
+                "s": "Standard",
+                "3": "Standard",
+                "basic": "Basic",
+                "bas": "Basic",
+                "b": "Basic",
+                "4": "Basic",
+            },
+            "product_brand": {
+                # Brand name normalization mappings
+                "multibrand": "Multibrand",
+                "aperol": "APEROL",
+                "aperol spritz": "Aperol Spritz",
+                "campari": "Campari",
+                "crodino": "Crodino",
+                "bulldog": "Bulldog",
+                "bulldog london dry gin": "BULLDOG LONDON DRY GIN",
+                "bulldog london dry": "BULLDOG LONDON DRY",
+                "braulio": "Braulio",
+                "averna": "Averna",
+                "amaro averna": "Amaro Averna",
+                "amaro averna siciliano": "AMARO AVERNA SICILIANO",
+                "cynar": "CYNAR",
+                "cinzano": "Cinzano",
+                "riccadonna": "Riccadonna",
+                "mondoro": "Mondoro",
+                "bickens": "Bickens",
+                "espolon tequila": "Espolon Tequila",
+                "espolon": "Espolon",
+                "espólon tequila": "ESPOLÓN TEQUILA",
+                "wild turkey": "Wild Turkey",
+                "appleton estate": "Appleton Estate",
+                "unbranded": "Unbranded",
+                "skyy vodka": "SKYY Vodka",
+                "wild turkey american honey": "Wild Turkey American Honey",
+                "american honey": "AMERICAN HONEY",
+                "wild turkey american honey®": "Wild Turkey American Honey®",
+                "the glen grant": "The Glen Grant",
+                "glengrant": "GLENGRANT",
+                "glen grant": "Glen Grant",
+                "wray & nephew": "WRAY & NEPHEW",
+                "montelobos": "MONTELOBOS",
+                "montelobos®": "MONTELOBOS®",
+                "montelobos® - mezcal artesanal": "MONTELOBOS® - MEZCAL ARTESANAL",
+                "mayenda tequila": "Mayenda Tequila",
+                "mayenda": "Mayenda",
+                "howler head": "Howler Head",
+                "ancho reyes": "Ancho Reyes",
+                "grand marnier": "Grand Marnier",
+                "lallier": "Lallier",
+                "lallier champagne": "Lallier Champagne",
+                "bisquit & dubouché": "Bisquit & Dubouché",
+                "bisquit & dubouche": "Bisquit & Dubouche",
+                "bisquit & dubouche cognac": "Bisquit & Dubouche Cognac",
+                "picon": "Picon",
+                "campari group": "Campari Group",
+                "campari academy": "Campari Academy",
+                # Add common case variations
+                "multibrand": "Multibrand",
+                "aperol": "APEROL",
+                "campari": "Campari",
+                "crodino": "Crodino",
+                "bulldog": "Bulldog",
+                "braulio": "Braulio",
+                "averna": "Averna",
+                "cynar": "CYNAR",
+                "cinzano": "Cinzano",
+                "riccadonna": "Riccadonna",
+                "mondoro": "Mondoro",
+                "bickens": "Bickens",
+                "espolon": "Espolon",
+                "wild turkey": "Wild Turkey",
+                "appleton estate": "Appleton Estate",
+                "unbranded": "Unbranded",
+                "skyy vodka": "SKYY Vodka",
+                "glen grant": "Glen Grant",
+                "wray & nephew": "WRAY & NEPHEW",
+                "montelobos": "MONTELOBOS",
+                "mayenda": "Mayenda",
+                "howler head": "Howler Head",
+                "ancho reyes": "Ancho Reyes",
+                "grand marnier": "Grand Marnier",
+                "lallier": "Lallier",
+                "bisquit & dubouche": "Bisquit & Dubouche",
+                "picon": "Picon",
+                "campari group": "Campari Group",
+            },
+            "product_placement": {
+                "external": "External",
+                "outdoor": "External",
+                "outside": "External",
+                "internal": "Internal",
+                "indoor": "Internal",
+                "inside": "Internal",
+                "table": "Table/Counter",
+                "counter": "Table/Counter",
+                "tabletop": "Table/Counter",
+                "staff": "Staff",
+                "employee": "Staff",
+                "personnel": "Staff",
+            },
+        }
 
     def ask_question(self, question: str) -> Dict[str, Any]:
         try:
@@ -777,71 +754,3 @@ class NaturalLanguageQASystem:
             "confidence": ai_response.get("confidence", "N/A"),
             "confidence_reason": ai_response.get("confidence_reason", ""),
         }
-
-    def _load_value_mappings_from_blob(self):
-        cached = self.cache.get("value_mapping")
-        if cached:
-            return json.loads(cached)
-
-        try:
-            downloader = self.blob_client.download_blob()
-            config_data = downloader.readall()
-            mapping_data = json.loads(config_data)
-
-            self.cache.set("value_mapping", json.dumps(mapping_data))
-            logger.info(
-                f"Successfully loaded value mapping configuration from Blob storage: {self.container_name}/{self.blob_name}"
-            )
-            return mapping_data
-
-        except Exception as e:
-            logger.warn(
-                f"Unable to load value mapping configuration from Blob storage: {str(e)}"
-            )
-            logger.info("Mapping configuration using built-in fallback values")
-            return {
-                "product_execution_level": {
-                    "lighthouse": "Lighthouse",
-                    "lh": "Lighthouse",
-                    "l": "Lighthouse",
-                    "light": "Lighthouse",
-                    "1": "Lighthouse",
-                    "enhanced": "Enhanced",
-                    "enh": "Enhanced",
-                    "e": "Enhanced",
-                    "2": "Enhanced",
-                    "standard": "Standard",
-                    "std": "Standard",
-                    "s": "Standard",
-                    "3": "Standard",
-                    "basic": "Basic",
-                    "bas": "Basic",
-                    "b": "Basic",
-                    "4": "Basic",
-                },
-                "product_brand": {
-                    "aperol": "APEROL",
-                    "campari": "Campari",
-                    "crodino": "Crodino",
-                    "bulldog": "Bulldog",
-                    "braulio": "Braulio",
-                    "averna": "Averna",
-                    "cynar": "CYNAR",
-                    "cinzano": "Cinzano",
-                    "riccadonna": "Riccadonna",
-                    "espolon": "Espolon",
-                    "wild turkey": "Wild Turkey",
-                    "appleton estate": "Appleton Estate",
-                    "unbranded": "Unbranded",
-                    "glen grant": "Glen Grant",
-                },
-                "product_placement": {
-                    "external": "External",
-                    "outdoor": "External",
-                    "internal": "Internal",
-                    "indoor": "Internal",
-                    "table": "Table/Counter",
-                    "counter": "Table/Counter",
-                    "staff": "Staff",
-                },
-            }
